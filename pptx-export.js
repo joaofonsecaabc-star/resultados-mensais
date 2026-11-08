@@ -57,7 +57,7 @@ async function normalizePptxPackage(data,ZipCtor,outputType='blob'){
   return zip.generateAsync({type:outputType,compression:'DEFLATE',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
 }
 let pptxLoadPromise;
-function loadPptxLibrary(){if(globalThis.pptxgen)return Promise.resolve(globalThis.pptxgen);if(pptxLoadPromise)return pptxLoadPromise;pptxLoadPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='pptxgen.bundle.js';script.onload=()=>globalThis.pptxgen?resolve(globalThis.pptxgen):reject(Error('Biblioteca indisponível.'));script.onerror=()=>{pptxLoadPromise=null;script.remove();reject(Error('Não foi possível carregar o gerador. Verifique a conexão e tente novamente.'))};document.head.appendChild(script)});return pptxLoadPromise}
+function loadPptxLibrary(){if((globalThis.PptxGenJS||globalThis.pptxgen))return Promise.resolve((globalThis.PptxGenJS||globalThis.pptxgen));if(pptxLoadPromise)return pptxLoadPromise;pptxLoadPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='pptxgen.bundle.js';script.onload=()=>(globalThis.PptxGenJS||globalThis.pptxgen)?resolve((globalThis.PptxGenJS||globalThis.pptxgen)):reject(Error('Biblioteca indisponível.'));script.onerror=()=>{pptxLoadPromise=null;script.remove();reject(Error('Não foi possível carregar o gerador. Verifique a conexão e tente novamente.'))};document.head.appendChild(script)});return pptxLoadPromise}
 async function downloadResultsPptx(){
   const buttons=[...document.querySelectorAll('[data-export-pptx]')],status=document.querySelector('#pptx-status');
   try{

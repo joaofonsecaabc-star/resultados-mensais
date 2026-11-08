@@ -5,6 +5,12 @@ const runtimeModules=process.env.ABC_RUNTIME_MODULES;
 if(!runtimeModules)throw Error('Defina ABC_RUNTIME_MODULES para testar o gerador usando as bibliotecas do ambiente.');
 const Ctor=require(path.join(runtimeModules,'pptxgenjs'));
 async function check(){
+  const browser={setTimeout,clearTimeout,console,Promise,TextEncoder,TextDecoder,Uint8Array,ArrayBuffer,Blob,URL};vm.createContext(browser);
+  vm.runInContext(fs.readFileSync('pptxgen.bundle.js','utf8'),browser);
+  vm.runInContext(fs.readFileSync('pptx-export.js','utf8'),browser);
+  assert.equal(typeof await vm.runInContext('loadPptxLibrary()',browser),'function');
+  assert.equal(typeof browser.JSZip,'function');
+  console.log('PASS: carregamento da biblioteca real no contexto do navegador.');
   fs.mkdirSync('.qa',{recursive:true});
   for(const name of ['demo','zero','negative','missing']){
     vm.runInContext(`seed();$('#store').value='0';$('#month').value='2026-10';`,sandbox);
