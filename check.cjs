@@ -12,17 +12,17 @@ for(let year=2020;year<=2035;year++)for(let month=1;month<=12;month++){
 }
 const elements={};function element(key){return elements[key]??={value:key==='#month'?'2026-10':key==='#store'?'0':'',style:{},hidden:true,checked:false,textContent:'',innerHTML:'',className:'',files:[],classList:{add(){},remove(){},toggle(){}},addEventListener(){},setAttribute(){},insertAdjacentHTML(where,html){this.innerHTML=html+this.innerHTML},showModal(){},close(){},click(){this.onclick?.()},focus(){},appendChild(el){elements['#'+el.id]=el}}}
 const sandbox={console,Intl,Date,structuredClone,Number,Math,String,Object,Array,JSON,Blob,URL,setTimeout,localStorage:{getItem:()=>null,setItem(){}},document:{querySelector:element,querySelectorAll:()=>[],createElement:()=>element('new-'+Object.keys(elements).length),addEventListener(){},body:{style:{}},documentElement:{classList:{toggle(){}}}},alert(){},confirm:()=>true};vm.createContext(sandbox);
-for(const f of ['calendar.js','app.js','presentation.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'.',f),'utf8'),sandbox);
+for(const f of ['calendar.js','app.js','insights.js','presentation.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'.',f),'utf8'),sandbox);
 vm.runInContext(`
 validate(db);
 if(sum(record()).sale!==438000)throw Error('Venda total incorreta');
 if(Math.abs(sum(record()).net-83220)>4)throw Error('Resultado incorreto');
 if(sum(record()).average!==109500)throw Error('Média incorreta');
-for(let store of ['0','1','all']){ $('#store').value=store;for(let section=0;section<6;section++){let out=renderSection(section);if(!out||/NaN|undefined/.test(out))throw Error('Render inválido '+store+'/'+section);let tv=slideBody(section);if(!tv||/NaN|undefined/.test(tv))throw Error('Slide inválido')}}
+for(let store of ['0','1','all']){ $('#store').value=store;for(let section=0;section<10;section++){let out=renderSection(Math.min(5,section));if(!out||/NaN|undefined/.test(out))throw Error('Render inválido '+store+'/'+section);let tv=slideBody(section);if(!tv||/NaN|undefined/.test(tv))throw Error('Slide inválido')}}
 $('#store').value='all';if(Math.abs(sum(record()).sale-779640)>2)throw Error('Consolidado incorreto');
-$('#month').value='2026-11';if(record()!==null)throw Error('Mês vazio inválido');for(let i=0;i<6;i++){renderSection(i);slideBody(i)}
+$('#month').value='2026-11';if(record()!==null)throw Error('Mês vazio inválido');for(let i=0;i<10;i++){renderSection(Math.min(i,5));slideBody(i)}
 let zero={calendarVersion:2,demo:false,target:0,notes:'',weeks:Array.from({length:5},()=>Object.fromEntries(fields.map(([k])=>[k,0])))};
-db.records['0|2026-11']=zero;$('#store').value='0';for(let i=0;i<6;i++){if(/NaN|Infinity/.test(renderSection(i)+slideBody(i)))throw Error('Zero não tratado')}
+db.records['0|2026-11']=zero;$('#store').value='0';for(let i=0;i<10;i++){if(/NaN|Infinity/.test(renderSection(Math.min(i,5))+slideBody(i)))throw Error('Zero não tratado')}
 if(!weeklyTable(record()).includes('30/11 a 06/12'))throw Error('Datas ausentes');
 active=6;render();if(!$('#content').innerHTML.includes('Iniciar apresentação'))throw Error('Aba ausente');
 startPresentation(4);if($('#presentation').hidden||slideIndex!==4)throw Error('Abertura de slide inválida');
@@ -36,6 +36,7 @@ let old={...structuredClone(zero),calendarVersion:1};db.records['0|2026-12']=old
 $('#edit-month').value='2026-12';loadEditor();if(draft.length!==5||$('#review-label').hidden)throw Error('Legado não preservado');
 $('#review-confirm').checked=true;$('#data-form').onsubmit({preventDefault(){}});if(!$('#form-error').textContent.includes('fora do calendário')||db.records['0|2026-12'].weeks[4].sale!==900)throw Error('Semana extra removida');
 $('#month').value='2026-12';drawSlide();if(!$('#slide').innerHTML.includes('Confira o calendário'))throw Error('Apresentação de legado sem revisão');
-console.log('PASS: cálculos, duas lojas/consolidado, 6 slides, navegação, salvamento, importação e preservação de legado.');
+console.log('PASS: cálculos, duas lojas/consolidado, 10 slides, navegação, salvamento, importação e preservação de legado.');
 `,sandbox);
 console.log('PASS: 192 meses, segunda a domingo, sem lacunas ou duplicação.');
+module.exports={sandbox};

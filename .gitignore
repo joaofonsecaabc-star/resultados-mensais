@@ -4,3 +4,7 @@ node_modules/
 .env
 .env.*
 backups/
+
+.qa/
+upgrade-views.cjs
+polish-export.cjs

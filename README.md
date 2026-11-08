@@ -6,7 +6,13 @@ Painel independente para **ABC DOZE DE OUTUBRO** e **ABC PEDRO LEOPOLDO**, com i
 
 Selecione unidade e mês, clique em **Lançar dados** e preencha venda geral, compras de biscoitos, folhas e demais produtos, despesas e detalhamento opcional das vendas. A venda geral é o total oficial: categorias não são somadas novamente.
 
-A aba **Apresentação de resultados** abre seis slides para televisão, em tela cheia quando suportado pelo navegador. Use as setas ou Page Up/Page Down para navegar; Home/End vão ao início/fim. O roteiro de fala fica oculto e pode ser aberto manualmente (aparece também na TV). O botão Sair encerra a apresentação.
+A aba **Apresentação de resultados** abre dez slides para televisão, em tela cheia quando suportado pelo navegador. Use as setas ou Page Up/Page Down para navegar; Home/End vão ao início/fim. O roteiro de fala fica oculto e pode ser aberto manualmente (aparece também na TV). O botão Sair encerra a apresentação.
+
+**Baixar PowerPoint** gera um `.pptx` de dez slides com a unidade e o mês selecionados, comparativo dos últimos três meses, gráficos editáveis, notas do apresentador e a logo oficial. O processamento ocorre no navegador; os lançamentos não são enviados a um servidor. O gerador usa PptxGenJS 4.0.1 e JSZip incluídos no próprio site, sob licença MIT. O arquivo identifica exemplos como demonstração e exige revisão de lançamentos antigos antes de exportar. O slide entre lojas inclui as duas unidades e sinaliza exemplos ou ausência de dados.
+
+A aba **Análises e gráficos** acrescenta margens bruta e líquida, destino do faturamento, venda acumulada versus meta, comparativo entre lojas, venda versus compras por semana e resultado líquido mensal. A meta acumulada distribui o valor mensal igualmente entre as semanas como referência, sem previsão automática. Valores negativos aparecem abaixo de zero e margens sem venda ficam sem base de cálculo.
+
+TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo e vermelho. O calendário e os cálculos permanecem os mesmos do painel.
 
 ## Calendário de apuração
 
