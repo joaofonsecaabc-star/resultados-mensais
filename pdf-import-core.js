@@ -19,14 +19,14 @@
   const monday=d.toISOString().slice(0,10),month=monday.slice(0,7),week=root.monthWeeks(month).findIndex(w=>w.start===monday);
   return {month,week,start:monday,end:root.monthWeeks(month)[week].end};
  }
- function key(row){return 't:'+branch(row.branch)+'|'+clean(row.doc)+'|'+clean(row.parcel)+'|'+clean(row.supplier)}
+ function key(row){return row.kind==='sale'?'s:'+branch(row.branch)+'|'+row.due:'t:'+branch(row.branch)+'|'+clean(row.doc)+'|'+clean(row.parcel)+'|'+clean(row.supplier)}
  function check(row){
   const errors=[];if(!(branch(row.branch) in branches))errors.push('Identifique a filial 016 ou 027');
   if(!clean(row.doc)||!clean(row.parcel))errors.push('Documento e parcela são obrigatórios');
   if(!clean(row.supplier))errors.push('Informe o fornecedor');
-  if(!validISO(row.due))errors.push('Confira o vencimento');
-  if(!Number.isFinite(row.value)||row.value<=0||row.value>1e12)errors.push('Confira o valor');
-  if(!categories.includes(row.category))errors.push('Escolha o grupo da compra');
+  if(!validISO(row.due))errors.push(row.kind==='sale'?'Confira a data do movimento':'Confira o vencimento');
+  if(!Number.isFinite(row.value)||row.value<0||(row.kind!=='sale'&&row.value===0)||row.value>1e12)errors.push('Confira o valor');
+  if(row.kind==='sale'?row.category!=='sale':!categories.includes(row.category))errors.push('Escolha o grupo do lançamento');
   return errors;
  }
  function lines(items){
@@ -35,7 +35,7 @@
   return out.sort((a,b)=>b.y-a.y).map(l=>({...l,items:l.items.sort((a,b)=>a.x-b.x)}));
  }
  function words(line){return line.items.flatMap(i=>{let at=0;return i.text.split(/(\s+)/).filter(Boolean).flatMap(t=>{const x=i.x+i.width*at/i.text.length;at+=t.length;return t.trim()?[{text:t,x}]:[]})})}
- function parsePages(pages,file='Relatório.pdf'){
+ function parsePurchases(pages,file='Relatório.pdf'){
   const rows=[],warnings=[];let expectedTotal=null,expectedCount=null,headers=0,textLength=0;
   pages.forEach((items,page)=>{
    let anchors=null;
@@ -67,7 +67,37 @@
   const total=rows.reduce((sum,r)=>sum+(r.value===null?0:cents(r.value)),0)/100;
   if(expectedTotal!==null&&cents(total)!==cents(expectedTotal))warnings.push('A soma extraída não confere com o Total Geral. Importação bloqueada para evitar dados incompletos.');
   if(expectedCount!==null&&rows.length!==expectedCount)warnings.push('A quantidade de títulos extraída não confere com o relatório.');
-  return {file,rows,total,expectedTotal,expectedCount,warnings};
+  return {file,kind:'purchase',rows,total,expectedTotal,expectedCount,warnings};
+ }
+ function parseSales(pages,file='Relatório.pdf'){
+  const rows=[],warnings=[];let currentDate='',currentBranch='',expectedTotal=null,foundHeader=false;
+  for(let page=0;page<pages.length;page++){
+   let walletX=null,saleX=null;
+   for(const line of lines(pages[page])){
+    const ws=words(line),text=ws.map(w=>w.text).join(' '),normalized=clean(text);
+    const filial=/(?:Empresa\s*\/\s*Filial|Filial|Loja)\s*:?\s*(\d{1,3})\b/i.exec(text);
+    if(filial)currentBranch=branch(filial[1]);
+    else if(/DOZEDEOUTUBRO|12DEOUTUBRO/.test(normalized))currentBranch='016';
+    else if(normalized.includes('PEDROLEOPOLDO'))currentBranch='027';
+    const day=/Data(?:\s+(?:do\s+)?Movimento)?\s*:\s*(\d{2}\/\d{2}\/(?:\d{4}|\d{2}))/i.exec(text);if(day)currentDate=date(day[1]);
+    const wallet=ws.find(w=>clean(w.text).includes('CARTEIRAS'));
+    if(wallet){walletX=wallet.x;const sell=ws.filter(w=>clean(w.text)==='VENDA'||clean(w.text)==='TOTVENDA').at(-1);saleX=sell?.x??walletX-80;foundHeader=true;continue}
+    if(!/^(?:TOTDATA|TOTALDATA|TOTALDADATA|TOTGERAL|TOTALGERAL)/.test(normalized))continue;
+    const values=ws.filter(w=>amount(w.text)!==null&&walletX!==null&&w.x>(saleX+walletX)/2),last=values.at(-1);
+    if(/^(?:TOTGERAL|TOTALGERAL)/.test(normalized)){if(last)expectedTotal=amount(last.text);continue}
+    // Somente Tot Data / Tot. Carteiras. Nunca somar os caixas ao total do dia.
+    rows.push({kind:'sale',branch:currentBranch,doc:currentDate.replace(/-/g,'')||'DIA-'+(rows.length+1),parcel:'1',supplier:'Venda diária · Total Carteiras',due:currentDate,value:last?amount(last.text):null,category:'sale',file,page:page+1,include:true});
+   }
+  }
+  if(!foundHeader)warnings.push('Não foi localizada a coluna Tot. Carteiras.');
+  if(!rows.length)warnings.push('Nenhum total do dia (Tot Data) foi reconhecido.');
+  const total=rows.reduce((n,r)=>n+(r.value===null?0:cents(r.value)),0)/100;
+  if(expectedTotal!==null&&cents(total)!==cents(expectedTotal))warnings.push('A soma extraída não confere com o Total Geral. Confira os valores na prévia.');
+  return {file,kind:'sale',rows,total,expectedTotal,expectedCount:null,warnings};
+ }
+ function parsePages(pages,file='Relatório.pdf'){
+  const text=pages.flat().map(i=>i.str||'').join(' ');
+  return /CARTEIRAS/i.test(text)?parseSales(pages,file):parsePurchases(pages,file);
  }
  function status(rows,journal={}){
   const seen=new Map();return rows.map(row=>{
@@ -94,11 +124,11 @@
    if(rec&&!rec.demo&&(rec.calendarVersion!==2||rec.weeks.length!==root.monthWeeks(a.month).length))throw Error('Revise o calendário dos lançamentos antigos de '+a.month+' antes de importar.');
    if(!rec||rec.demo){if(rec?.demo)replaced.push(periodKey);rec=next.records[periodKey]={calendarVersion:2,demo:false,target:0,notes:'',weeks:root.monthWeeks(a.month).map(()=>Object.fromEntries(fields.map(([k])=>[k,0])))} }
    rec.weeks[a.week][r.category]=(cents(rec.weeks[a.week][r.category])+cents(r.value))/100;
-   next.pdfImportTitles[s.id]={branch:branch(r.branch),doc:r.doc,parcel:r.parcel,supplier:r.supplier,due:r.due,value:r.value,category:r.category,file:r.file,periodKey,week:a.week,importedAt};
+   next.pdfImportTitles[s.id]={kind:r.kind||'purchase',branch:branch(r.branch),doc:r.doc,parcel:r.parcel,supplier:r.supplier,due:r.due,value:r.value,category:r.category,file:r.file,periodKey,week:a.week,importedAt};
    periods.add(periodKey);total+=cents(r.value);
   }
   return {db:next,count:selected.length,total:total/100,periods:[...periods],replaced:[...new Set(replaced)]};
  }
- const api={branches,categories,clean,branch,category,date,amount,allocation,key,check,parsePages,status,validateJournal,apply};
+ const api={branches,categories,clean,branch,category,date,amount,allocation,key,check,parsePages,parsePurchases,parseSales,status,validateJournal,apply};
  root.ABCPdf=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

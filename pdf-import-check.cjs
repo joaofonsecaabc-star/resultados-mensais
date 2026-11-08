@@ -21,5 +21,15 @@ const demo={version:1,records:{'1|2026-11':{...zero('2026-11'),demo:true}}};demo
 const legacy=structuredClone(db);legacy.records['1|2026-11'].calendarVersion=1;assert.throws(()=>p.apply(legacy,[known[0]],fields),/calendário/);
 const badItems=fixture().filter(i=>!(i.str==='02/11/26'&&i.transform[4]===590));badItems.push(item('30/11/26',650,450));assert.equal(p.parsePages([badItems]).rows[2].due,'');
 const incomplete=fixture().filter(i=>i.transform[5]!==480);assert.ok(p.parsePages([incomplete]).warnings.some(s=>s.includes('soma extraída')));assert.ok(p.parsePages([[]]).warnings.some(s=>s.includes('sem texto')));
+function salePage(day='08/11/2026',filial='016'){
+ return [item('Data: '+day,20,540),...(filial?[item('Empresa/Filial: '+filial,550,560)]:[]),item('Caixa',20,500),item('Produtos',100,500),item('Finalizadoras',200,500),item('Vendas PDV',300,500),item('Tot. Venda',650,500),item('Tot. Carteiras',750,500),
+ ...[['101','500,10','500,33'],['102','600,20','600,44'],['Tot Data','1.100,30','1.100,77']].flatMap(([name,sale,wallet],i)=>{const y=480-i*20;return [item(name,20,y),item(sale,100,y),item(sale,200,y),item(sale,300,y),item(sale,650,y),item(wallet,750,y)]})];
+}
+const sales=p.parsePages([salePage()],'venda-simulada.pdf');assert.deepEqual(sales.warnings,[]);assert.equal(sales.kind,'sale');assert.equal(sales.rows.length,1);assert.equal(sales.rows[0].value,1100.77);assert.equal(sales.rows[0].due,'2026-11-08');assert.equal(sales.rows[0].category,'sale');assert.equal(sales.rows[0].branch,'016');
+const unknownStore=p.parsePages([salePage('08/11/2026','')]);assert.ok(p.check(unknownStore.rows[0]).some(s=>s.includes('filial')));
+const sold=p.apply(result.db,sales.rows,fields);assert.equal(sold.db.records['0|2026-11'].weeks[0].sale,1100.77);assert.equal(sold.db.records['1|2026-11'].weeks[0].sale,500);p.validateJournal(sold.db.pdfImportTitles);
+assert.ok(p.status(sales.rows,sold.db.pdfImportTitles)[0].duplicate);assert.throws(()=>p.apply(sold.db,[{...sales.rows[0],value:2000}],fields),/Revise/);
+const multipleDays=p.parsePages([salePage(),salePage('09/11/2026')]);const multi=p.apply(db,multipleDays.rows,fields);assert.equal(multi.count,2);assert.equal(multi.db.records['0|2026-11'].weeks[0].sale,1100.77);assert.equal(multi.db.records['0|2026-11'].weeks[1].sale,1100.77);
+const cross=p.parsePages([salePage('06/12/2026','027')]);const boundary=p.apply(db,cross.rows,fields);assert.equal(boundary.db.records['1|2026-11'].weeks[4].sale,1100.77);
 const {sandbox}=require('./check.cjs');vm.runInContext(fs.readFileSync('pdf-import.js','utf8'),sandbox);vm.runInContext("active=8;render();if(!$('#content').innerHTML.includes('016 · Doze de Outubro'))throw Error('Configurações não renderizadas');active=0;render();",sandbox);
-console.log('PASS: PDF simulado de 12 títulos, vencimento, filiais 016/027, totais, duplicação, soma sem sobrescrita, demonstração, calendário e configurações.');
+console.log('PASS: compras por vencimento e vendas por Tot Data/Carteiras, filiais 016/027, sem somar caixas, múltiplos dias, totais, duplicação, soma sem sobrescrita e calendário.');

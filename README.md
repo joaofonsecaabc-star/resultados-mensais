@@ -66,3 +66,7 @@ Os gráficos têm rótulos e informações detalhadas por ponteiro ou foco do te
 Validação: `npm test` (dados sintéticos, duas filiais, vencimento e calendário, somas, duplicação, legado, navegação e cálculos) e `node build.cjs`.
 
 A entrada de dados usa apenas venda geral, compras de biscoitos/folhas/demais produtos e despesas. A antiga visão de vendas por categoria foi substituída por Compras sobre vendas, com proporções semanais e mensais. O quinto slide e seu roteiro seguem a mesma regra. Campos legados de categoria permanecem legíveis nos backups antigos e são zerados ao salvar novamente o formulário simplificado.
+
+## PDF de venda diária
+
+O segundo leitor identifica a data do movimento e importa exclusivamente a linha Tot Data na coluna Tot. Carteiras, ignorando as linhas dos caixas e Tot. Venda. A filial é extraída do cabeçalho ou do nome da unidade; se ausente, a prévia exige escolher 016/027. Cada loja e dia formam uma identidade para impedir duplicação do movimento. O valor diário é somado à venda geral da semana. Modelo validado com dados sintéticos; os arquivos originais ainda são necessários para validar o layout real.
