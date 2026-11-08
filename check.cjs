@@ -12,7 +12,7 @@ for(let year=2020;year<=2035;year++)for(let month=1;month<=12;month++){
 }
 const elements={};function element(key){return elements[key]??={value:key==='#month'?'2026-10':key==='#store'?'0':'',style:{},hidden:true,checked:false,textContent:'',innerHTML:'',className:'',files:[],classList:{add(){},remove(){},toggle(){}},addEventListener(){},setAttribute(){},insertAdjacentHTML(where,html){this.innerHTML=html+this.innerHTML},showModal(){},close(){},click(){this.onclick?.()},focus(){},appendChild(el){elements['#'+el.id]=el}}}
 const sandbox={console,Intl,Date,structuredClone,Number,Math,String,Object,Array,JSON,Blob,URL,setTimeout,localStorage:{getItem:()=>null,setItem(){}},document:{querySelector:element,querySelectorAll:()=>[],createElement:()=>element('new-'+Object.keys(elements).length),addEventListener(){},body:{style:{}},documentElement:{classList:{toggle(){}}}},alert(){},confirm:()=>true};vm.createContext(sandbox);
-for(const f of ['calendar.js','app.js','insights.js','presentation.js','slide-design.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'.',f),'utf8'),sandbox);
+for(const f of ['calendar.js','pdf-import-core.js','app.js','insights.js','presentation.js','slide-design.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'.',f),'utf8'),sandbox);
 vm.runInContext(`
 validate(db);
 if(sum(record()).sale!==438000)throw Error('Venda total incorreta');

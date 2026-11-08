@@ -1,4 +1,5 @@
 const GRAPH_COLORS=['#30651c','#88b428','#e2ac00','#cb1722','#76815d'];
+const chartMoney=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
 function presentationData(){
   const month=$('#month').value,store=$('#store').value,r=record(month,store);
   const history=months().map(m=>({month:m,label:monthLabel(m,true),record:record(m,store),totals:sum(record(m,store))}));
@@ -28,13 +29,15 @@ function svgGraph(model){
   let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(model.title)}"><title>${esc(model.title)}</title>`;
   for(let j=0;j<=4;j++){let v=low+(high-low)*j/4,yy=y(v);svg+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="#e2e8f0"/><text x="${L-12}" y="${yy+5}" text-anchor="end" fill="#64748b" font-size="18">${esc(graphValue(v,model.percent))}</text>`}
   svg+=`<line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="#9caec5"/>`;
+  const label=v=>model.percent?pct(v):new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}).format(v);
+  const tip=(s,v,i)=>esc(model.labels[i]+'\n'+s.name+'\n'+(model.percent?pct(v):chartMoney(v)));
   model.series.forEach((s,si)=>{const color=GRAPH_COLORS[si%GRAPH_COLORS.length];if(model.type==='line'){
     let segment=[];const flush=()=>{if(segment.length>1)svg+=`<polyline points="${segment.join(' ')}" fill="none" stroke="${color}" stroke-width="3.5"/>`;segment=[]};
     s.values.forEach((v,i)=>{if(v===null||!Number.isFinite(v)){flush();return}segment.push(x(i)+','+y(v))});flush();
-    s.values.forEach((v,i)=>{if(v===null||!Number.isFinite(v))return;svg+=`<circle cx="${x(i)}" cy="${y(v)}" r="5" fill="${color}"><title>${esc(s.name)}: ${esc(model.percent?pct(v):money(v))}</title></circle>`});
-  }else{s.values.forEach((v,i)=>{if(v===null||!Number.isFinite(v))return;let group=pw/model.labels.length*.66,bw=group/model.series.length,xx=x(i)-group/2+si*bw;svg+=`<rect x="${xx}" y="${Math.min(y(v),y(0))}" width="${Math.max(1,bw-5)}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" rx="3" fill="${v<0?'#d3344c':color}"><title>${esc(s.name)}: ${esc(money(v))}</title></rect>`})}});
+    s.values.forEach((v,i)=>{if(v===null||!Number.isFinite(v))return;svg+=`<g tabindex="0" data-chart-tip="${tip(s,v,i)}" aria-label="${tip(s,v,i)}"><circle cx="${x(i)}" cy="${y(v)}" r="14" fill="transparent"/><circle cx="${x(i)}" cy="${y(v)}" r="5" fill="${color}"/><text class="svg-data-label" x="${x(i)}" y="${y(v)+(si%2?24:-14)}" text-anchor="middle" fill="${color}" font-size="14">${esc(label(v))}</text></g>`});
+  }else{s.values.forEach((v,i)=>{if(v===null||!Number.isFinite(v))return;let group=pw/model.labels.length*.66,bw=group/model.series.length,xx=x(i)-group/2+si*bw;svg+=`<g tabindex="0" data-chart-tip="${tip(s,v,i)}" aria-label="${tip(s,v,i)}"><rect x="${xx}" y="${Math.min(y(v),y(0))}" width="${Math.max(1,bw-5)}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" rx="3" fill="${v<0?'#d3344c':color}"></rect><text class="svg-data-label" x="${xx+(bw-5)/2}" y="${v<0?y(v)+20:y(v)-9}" text-anchor="middle" fill="${v<0?'#c84237':color}" font-size="14">${esc(label(v))}</text></g>`})}});
   model.labels.forEach((label,i)=>svg+=`<text x="${x(i)}" y="${H-24}" text-anchor="middle" fill="#64748b" font-size="18">${esc(label)}</text>`);
-  svg+='</svg>';return `<div class="svg-graph">${svg}</div><div class="graph-legend">${model.series.map((s,i)=>`<span><i style="background:${GRAPH_COLORS[i%GRAPH_COLORS.length]}"></i>${esc(s.name)}</span>`).join('')}</div>`;
+  if(!model.percent)svg+='<text x="892" y="16" text-anchor="end" fill="#7b8776" font-size="13">Valores em R$</text>';svg+='</svg>';return `<div class="svg-graph">${svg}</div><div class="graph-legend" ${model.hideLegend?'hidden':''}>${model.series.map((s,i)=>`<span><i style="background:${GRAPH_COLORS[i%GRAPH_COLORS.length]}"></i>${esc(s.name)}</span>`).join('')}</div>`;
 }
 function insightsPage(){const d=presentationData(),m=analyticsModels(d),t=d.totals;
   if(!t)return '<div class="panel empty"><h2>Lance os dados deste período para gerar os gráficos.</h2></div>';

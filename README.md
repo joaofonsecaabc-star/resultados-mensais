@@ -52,3 +52,15 @@ Cloudflare Pages com integração GitHub:
 - Diretório raiz: raiz do repositório.
 
 O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A publicação contém apenas o aplicativo e os exemplos simulados. A fonte Manrope fica hospedada no próprio site para manter a exportação consistente.
+
+## Importação de compras por PDF
+
+Configurações → Importar PDFs lê localmente o relatório SGLinear Contas a Pagar com texto selecionável, usando PDF.js 5.6.205 (Apache-2.0, vendorizado). Filial 016 = Doze de Outubro; 027 = Pedro Leopoldo. Distribuidora é compra loja e Tradições é biscoito; outros fornecedores exigem classificação na prévia. A data é o vencimento, alocado na semana da segunda-feira inicial.
+
+A prévia compara soma e quantidade com o Total Geral e Quantidade Títulos quando encontrados, bloqueia divergências e permite revisar os campos. PDFs sem texto selecionável não são reconhecidos. Não há OCR. O modelo foi testado com PDF simulado; os PDFs originais e o segundo modelo ainda precisam ser conferidos.
+
+A confirmação soma apenas as compras selecionadas, sem alterar vendas, despesas, metas ou observações reais. Exemplos do período são substituídos por registros reais zerados. Um histórico por filial/documento/parcela/fornecedor identifica títulos repetidos e bloqueia alterações de data/valor em títulos reconhecidos. A prévia avisa para não repetir compras já digitadas manualmente. A gravação é atômica no localStorage; o histórico acompanha o backup. Ao restaurar backup, o histórico dos períodos substituídos é substituído junto com os valores.
+
+Os gráficos têm rótulos e informações detalhadas por ponteiro ou foco do teclado. Os rótulos também aparecem na captura do PPT; as informações interativas ficam no site.
+
+Validação: `npm test` (dados sintéticos, duas filiais, vencimento e calendário, somas, duplicação, legado, navegação e cálculos) e `node build.cjs`.
