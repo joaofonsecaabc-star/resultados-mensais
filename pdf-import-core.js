@@ -15,9 +15,7 @@
  const cents=n=>Math.round(n*100);
  function allocation(due){
   if(!validISO(due))throw Error('Vencimento inválido.');
-  const d=new Date(due+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);
-  const monday=d.toISOString().slice(0,10),month=monday.slice(0,7),week=root.monthWeeks(month).findIndex(w=>w.start===monday);
-  return {month,week,start:monday,end:root.monthWeeks(month)[week].end};
+  return root.periodForDate(due);
  }
  function key(row){return row.kind==='sale'?'s:'+branch(row.branch)+'|'+row.due:'t:'+branch(row.branch)+'|'+clean(row.doc)+'|'+clean(row.parcel)+'|'+clean(row.supplier)}
  function check(row){
@@ -111,7 +109,14 @@
   if(!journal||typeof journal!=='object'||Array.isArray(journal))throw Error('Histórico de PDFs inválido.');
   for(const [id,row]of Object.entries(journal)){
    if(!row||check(row).length||id!==key(row)||typeof row.file!=='string'||row.file.length>500||typeof row.importedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(row.importedAt))throw Error('Título inválido no histórico de PDFs.');
-   const a=allocation(row.due);if(row.periodKey!==branches[branch(row.branch)]+'|'+a.month||row.week!==a.week)throw Error('Calendário inválido no histórico de PDFs.');
+   const a=allocation(row.due);if(row.periodKey!==branches[branch(row.branch)]+'|'+a.month||row.week!==a.week){
+    // Preserva históricos anteriores à correção de agosto/setembro. Os valores
+    // desses períodos ficam sujeitos à revisão das datas no editor.
+    const d=new Date(row.due+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);
+    const oldMonth=d.toISOString().slice(0,7),first=new Date(oldMonth+'-01T12:00:00Z');first.setUTCDate(1+(8-first.getUTCDay())%7);
+    const oldWeek=Math.round((d-first)/(7*86400000));
+    if(!['2026-08','2026-09'].includes(oldMonth)||row.periodKey!==branches[branch(row.branch)]+'|'+oldMonth||row.week!==oldWeek)throw Error('Calendário inválido no histórico de PDFs.');
+   }
   }return journal;
  }
  function apply(db,rows,fields){

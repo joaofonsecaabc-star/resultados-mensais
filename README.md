@@ -18,13 +18,13 @@ TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo
 
 ## Calendário de apuração
 
-Cada semana tem sete dias, de segunda a domingo, e pertence ao mês em que começa sua segunda-feira. A última semana continua até o domingo seguinte sem ser dividida nem repetida no próximo mês. A numeração recomeça a cada mês.
+Cada semana tem sete dias, de segunda a domingo, sem divisão ou repetição entre períodos. Os limites seguem o calendário de apuração confirmado. Setembro/2026 começa em 31/08: 31/08–06/09, 07/09–13/09, 14/09–20/09, 21/09–27/09 e 28/09–04/10. Agosto/2026 termina em 30/08. Os demais meses começam na primeira segunda-feira do mês, preservando 30/11–06/12 como a 5ª semana de novembro. A numeração recomeça a cada período.
 
 - Outubro/2026: 05/10–11/10, 12/10–18/10, 19/10–25/10 e 26/10–01/11.
 - Novembro/2026: a 5ª semana é 30/11–06/12.
 - Dezembro/2026: a 1ª semana começa em 07/12.
 
-A confirmação de propriedade de novembro prevalece sobre a regra inicial que permitia a primeira semana começar no mês anterior. A interface calcula automaticamente quatro ou cinco semanas. Lançamentos antigos exigem conferência das datas antes de serem apresentados; valores fora do calendário não são descartados automaticamente.
+As confirmações específicas de setembro e novembro prevalecem sobre as regras gerais anteriores. A interface calcula automaticamente quatro ou cinco semanas. Lançamentos antigos exigem conferência das datas antes de serem apresentados; valores fora do calendário não são descartados automaticamente.
 
 ## Dados e resultados
 
@@ -55,7 +55,7 @@ O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A 
 
 ## Importação de compras por PDF
 
-Configurações → Importar PDFs lê localmente o relatório SGLinear Contas a Pagar com texto selecionável, usando PDF.js 5.6.205 (Apache-2.0, vendorizado). Filial 016 = Doze de Outubro; 027 = Pedro Leopoldo. Distribuidora é compra loja e Tradições é biscoito; outros fornecedores exigem classificação na prévia. A data é o vencimento, alocado na semana da segunda-feira inicial.
+Configurações → Importar PDFs lê localmente o relatório SGLinear Contas a Pagar com texto selecionável, usando PDF.js 5.6.205 (Apache-2.0, vendorizado). Filial 016 = Doze de Outubro; 027 = Pedro Leopoldo. Distribuidora é compra loja e Tradições é biscoito; outros fornecedores exigem classificação na prévia. A data é o vencimento, alocado conforme as datas do calendário de apuração.
 
 A prévia compara soma e quantidade com o Total Geral e Quantidade Títulos quando encontrados, bloqueia divergências e permite revisar os campos. PDFs sem texto selecionável não são reconhecidos. Não há OCR. O modelo foi testado com PDF simulado; os PDFs originais e o segundo modelo ainda precisam ser conferidos.
 
@@ -70,3 +70,5 @@ A entrada de dados usa apenas venda geral, compras de biscoitos/folhas/demais pr
 ## PDF de venda diária
 
 O segundo leitor identifica a data do movimento e importa exclusivamente a linha Tot Data na coluna Tot. Carteiras, ignorando as linhas dos caixas e Tot. Venda. A filial é extraída do cabeçalho ou do nome da unidade; se ausente, a prévia exige escolher 016/027. Cada loja e dia formam uma identidade para impedir duplicação do movimento. O valor diário é somado à venda geral da semana. Modelo validado com dados sintéticos; os arquivos originais ainda são necessários para validar o layout real.
+
+Correção de setembro/2026: `periodForDate` é a fonte única para localizar loja/mês/semana das importações. Períodos totalmente zerados são ajustados automaticamente à nova quantidade de semanas. Períodos antigos com valores são preservados para revisão no editor; históricos legados de PDFs permanecem válidos para evitar perda de dados ou duplicação.

@@ -1,12 +1,15 @@
-const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/strict'),{monthWeeks}=require('./calendar.js');
+const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/strict'),{monthWeeks,periodForDate}=require('./calendar.js');
 assert.deepEqual(monthWeeks('2026-10'),[{start:'2026-10-05',end:'2026-10-11'},{start:'2026-10-12',end:'2026-10-18'},{start:'2026-10-19',end:'2026-10-25'},{start:'2026-10-26',end:'2026-11-01'}]);
 assert.equal(monthWeeks('2026-11').length,5);
 assert.deepEqual(monthWeeks('2026-11').at(-1),{start:'2026-11-30',end:'2026-12-06'});
 assert.equal(monthWeeks('2026-12')[0].start,'2026-12-07');
+assert.deepEqual(monthWeeks('2026-09'),[{start:'2026-08-31',end:'2026-09-06'},{start:'2026-09-07',end:'2026-09-13'},{start:'2026-09-14',end:'2026-09-20'},{start:'2026-09-21',end:'2026-09-27'},{start:'2026-09-28',end:'2026-10-04'}]);
+assert.equal(monthWeeks('2026-08').length,4);assert.equal(monthWeeks('2026-08').at(-1).end,'2026-08-30');
 for(let year=2020;year<=2035;year++)for(let month=1;month<=12;month++){
   const key=year+'-'+String(month).padStart(2,'0'),weeks=monthWeeks(key);
   assert.ok([4,5].includes(weeks.length));
-  weeks.forEach((w,i)=>{assert.equal(new Date(w.start).getUTCDay(),1);assert.equal(new Date(w.end).getUTCDay(),0);assert.equal(w.start.slice(0,7),key);assert.equal((new Date(w.end)-new Date(w.start))/86400000,6);if(i)assert.equal((new Date(w.start)-new Date(weeks[i-1].start))/86400000,7)});
+  weeks.forEach((w,i)=>{assert.equal(new Date(w.start).getUTCDay(),1);assert.equal(new Date(w.end).getUTCDay(),0);if(key!=='2026-09')assert.equal(w.start.slice(0,7),key);assert.equal((new Date(w.end)-new Date(w.start))/86400000,6);if(i)assert.equal((new Date(w.start)-new Date(weeks[i-1].start))/86400000,7)});
+  weeks.forEach((w,i)=>{for(const date of [w.start,w.end]){const period=periodForDate(date);assert.equal(period.month,key);assert.equal(period.week,i)}});
   const next=new Date(Date.UTC(year,month,1)),nextKey=next.getUTCFullYear()+'-'+String(next.getUTCMonth()+1).padStart(2,'0');
   assert.equal((new Date(monthWeeks(nextKey)[0].start)-new Date(weeks.at(-1).end))/86400000,1);
 }
@@ -41,6 +44,11 @@ if($('#edit-table').innerHTML.includes('data-key="cookieSale"')||$('#edit-table'
 if(!slideTitles[4].includes('Compras')||slideBody(4).includes('A detalhar')||!speech(4).includes('venda geral'))throw Error('Apresentação exige venda por categoria');
 const lineTest=svgGraph({title:'Margens',type:'line',percent:true,labels:['A'],series:[{name:'Margem',values:[12.5]}]});
 if(!lineTest.includes('svg-data-label')||!lineTest.includes('data-chart-tip')||!lineTest.includes('12,5%'))throw Error('Rótulo ou detalhe ausente no gráfico de linha');
+const blankWeek=()=>Object.fromEntries(fields.map(([k])=>[k,0]));
+let resetCalendar={records:{'0|2026-08':{calendarVersion:2,demo:false,target:100,notes:'Meta preservada',weeks:Array.from({length:5},blankWeek)},'0|2026-09':{calendarVersion:2,demo:false,target:0,notes:'',weeks:Array.from({length:4},blankWeek)}}};
+if(!normalizeEmptyCalendars(resetCalendar)||resetCalendar.records['0|2026-08'].weeks.length!==4||resetCalendar.records['0|2026-09'].weeks.length!==5||resetCalendar.records['0|2026-08'].target!==100)throw Error('Períodos zerados não ajustados');
+let preserveCalendar={records:{'0|2026-08':{calendarVersion:2,demo:false,target:0,notes:'',weeks:Array.from({length:5},blankWeek)}}};preserveCalendar.records['0|2026-08'].weeks[4].sale=123;
+if(normalizeEmptyCalendars(preserveCalendar)||preserveCalendar.records['0|2026-08'].weeks[4].sale!==123)throw Error('Lançamentos reais alterados sem revisão');
 console.log('PASS: cálculos, duas lojas/consolidado, 10 slides, venda geral sem categorias, rótulos, navegação, salvamento e legado.');
 `,sandbox);
 console.log('PASS: 192 meses, segunda a domingo, sem lacunas ou duplicação.');
