@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build.cjs",
-    "test": "node pdf-import-check.cjs",
+    "test": "node startup-check.cjs && node pdf-import-check.cjs",
     "dev": "node serve.cjs"
   },
   "engines": {

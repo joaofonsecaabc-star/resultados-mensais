@@ -28,7 +28,7 @@ As confirmações específicas de setembro e novembro prevalecem sobre as regras
 
 ## Dados e resultados
 
-Os exemplos são identificados como demonstração. Os lançamentos ficam **neste navegador**, sem servidor de dados ou sincronização entre computadores. Use Exportar backup para guardar e transferir o JSON; Importar backup valida o conteúdo e mescla os períodos, confirmando a substituição de períodos iguais. A mudança de domínio não transfere localStorage: exporte no domínio anterior e importe no novo.
+O site inicia sem lançamentos e não gera exemplos automáticos. Períodos antigos marcados como demonstração são removidos ao carregar a página ou importar um backup; os registros reais são preservados. Os lançamentos ficam **neste navegador**, sem servidor de dados ou sincronização entre computadores. Use Exportar backup para guardar e transferir o JSON; Importar backup valida o conteúdo e mescla os períodos, confirmando a substituição de períodos iguais. A mudança de domínio não transfere localStorage: exporte no domínio anterior e importe no novo.
 
 Resultado bruto estimado = venda − compras. Resultado líquido estimado = resultado bruto − despesas. As compras são uma aproximação de custo; o painel não recebe estoque inicial/final para calcular CMV contábil. Média semanal = venda do período ÷ número de semanas apuradas.
 
@@ -51,7 +51,7 @@ Cloudflare Pages com integração GitHub:
 - Diretório de saída: `dist`.
 - Diretório raiz: raiz do repositório.
 
-O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A publicação contém apenas o aplicativo e os exemplos simulados. A fonte Manrope fica hospedada no próprio site para manter a exportação consistente.
+O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A publicação contém apenas o aplicativo. Dados sintéticos ficam em arquivos exclusivos de teste, fora de dist. A fonte Manrope fica hospedada no próprio site para manter a exportação consistente.
 
 ## Importação de compras por PDF
 
@@ -72,3 +72,5 @@ A entrada de dados usa apenas venda geral, compras de biscoitos/folhas/demais pr
 O segundo leitor identifica a data do movimento e importa exclusivamente a linha Tot Data na coluna Tot. Carteiras, ignorando as linhas dos caixas e Tot. Venda. A filial é extraída do cabeçalho ou do nome da unidade; se ausente, a prévia exige escolher 016/027. Cada loja e dia formam uma identidade para impedir duplicação do movimento. O valor diário é somado à venda geral da semana. Modelo validado com dados sintéticos; os arquivos originais ainda são necessários para validar o layout real.
 
 Correção de setembro/2026: `periodForDate` é a fonte única para localizar loja/mês/semana das importações. Períodos totalmente zerados são ajustados automaticamente à nova quantidade de semanas. Períodos antigos com valores são preservados para revisão no editor; históricos legados de PDFs permanecem válidos para evitar perda de dados ou duplicação.
+
+Correção de inicialização: nenhum caminho de execução do aplicativo cria números simulados, incluindo ausência de dados ou falha na leitura do armazenamento. A remoção de demonstrações é restrita a registros com `demo: true`; lançamentos reais e seu histórico de PDFs permanecem intactos. A barra visual do menu lateral é oculta sem bloquear sua rolagem.
