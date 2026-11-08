@@ -4,7 +4,7 @@ Painel independente para **ABC DOZE DE OUTUBRO** e **ABC PEDRO LEOPOLDO**, com i
 
 ## Uso
 
-Selecione unidade e mês, clique em **Lançar dados** e preencha venda geral, compras de biscoitos, folhas e demais produtos, despesas e detalhamento opcional das vendas. A venda geral é o total oficial: categorias não são somadas novamente.
+Selecione unidade e mês, clique em **Lançar dados** e preencha venda geral, compras de biscoitos, folhas e demais produtos, despesas sem detalhamento das vendas por categoria. A venda geral é o total oficial.
 
 A aba **Apresentação de resultados** abre dez slides para televisão, em tela cheia quando suportado pelo navegador. Use as setas ou Page Up/Page Down para navegar; Home/End vão ao início/fim. O roteiro de fala fica oculto e pode ser aberto manualmente (aparece também na TV). O botão Sair encerra a apresentação.
 
@@ -64,3 +64,5 @@ A confirmação soma apenas as compras selecionadas, sem alterar vendas, despesa
 Os gráficos têm rótulos e informações detalhadas por ponteiro ou foco do teclado. Os rótulos também aparecem na captura do PPT; as informações interativas ficam no site.
 
 Validação: `npm test` (dados sintéticos, duas filiais, vencimento e calendário, somas, duplicação, legado, navegação e cálculos) e `node build.cjs`.
+
+A entrada de dados usa apenas venda geral, compras de biscoitos/folhas/demais produtos e despesas. A antiga visão de vendas por categoria foi substituída por Compras sobre vendas, com proporções semanais e mensais. O quinto slide e seu roteiro seguem a mesma regra. Campos legados de categoria permanecem legíveis nos backups antigos e são zerados ao salvar novamente o formulário simplificado.

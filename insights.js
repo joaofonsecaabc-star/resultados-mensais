@@ -7,10 +7,12 @@ function presentationData(){
   let review=[];for(const item of [...history,...stores.map(s=>({...s,month}))]){const v=item.record;if(v&&!v.demo&&(v.calendarVersion!==2||v.weeks.length!==monthWeeks(item.month).length))review.push((item.name||monthLabel(item.month)))}
   return structuredClone({month,store,unit:store==='all'?'Consolidado · duas lojas':STORES[+store],record:r,totals:sum(r),history,stores,review:[...new Set(review)],demo:history.some(h=>h.record?.demo)||stores.some(s=>s.record?.demo),dates:monthWeeks(month)});
 }
+function purchaseRatioModel(r=record()){return {title:'Compras sobre a venda geral',type:'bar',percent:true,labels:r?r.weeks.map((_,i)=>(i+1)+'ª sem.'):[],series:[{name:'Compras ÷ venda geral',values:r?r.weeks.map(w=>w.sale?(w.cookieBuy+w.leafBuy+w.storeBuy)/w.sale*100:null):[]}]}}
 function analyticsModels(d=presentationData()){
   const r=d.record,t=d.totals,history=d.history.filter(h=>h.totals),stores=d.stores.filter(s=>s.totals);
   let cumulative=0;
   return {
+    purchaseRatio:purchaseRatioModel(r),
     margins:{title:'Evolução das margens',type:'line',percent:true,labels:history.map(h=>h.label),series:[{name:'Margem bruta estimada',values:history.map(h=>h.totals.sale?h.totals.gross/h.totals.sale*100:null)},{name:'Margem líquida estimada',values:history.map(h=>h.totals.sale?h.totals.net/h.totals.sale*100:null)}]},
     destination:{title:'Destino do faturamento',type:'bar',labels:['Venda','Compras','Despesas','Resultado estimado'],series:[{name:'Valor em reais',values:t?[t.sale,t.buy,t.expenses,t.net]:[]}]},
     goal:{title:'Venda acumulada versus meta',type:'line',labels:r?r.weeks.map((_,i)=>(i+1)+'ª sem.'):[],series:r?[{name:'Venda acumulada',values:r.weeks.map(w=>cumulative+=w.sale)},...(r.target>0?[{name:'Meta distribuída por semana',values:r.weeks.map((_,i)=>r.target*(i+1)/r.weeks.length)}]:[])]:[]},

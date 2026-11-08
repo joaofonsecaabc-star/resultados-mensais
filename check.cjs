@@ -36,7 +36,12 @@ let old={...structuredClone(zero),calendarVersion:1};db.records['0|2026-12']=old
 $('#edit-month').value='2026-12';loadEditor();if(draft.length!==5||$('#review-label').hidden)throw Error('Legado não preservado');
 $('#review-confirm').checked=true;$('#data-form').onsubmit({preventDefault(){}});if(!$('#form-error').textContent.includes('fora do calendário')||db.records['0|2026-12'].weeks[4].sale!==900)throw Error('Semana extra removida');
 $('#month').value='2026-12';drawSlide();if(!$('#slide').innerHTML.includes('Confira o calendário'))throw Error('Apresentação de legado sem revisão');
-console.log('PASS: cálculos, duas lojas/consolidado, 10 slides, navegação, salvamento, importação e preservação de legado.');
+seed();$('#month').value='2026-10';$('#store').value='0';$('#edit-store').value='0';$('#edit-month').value='2026-10';loadEditor();
+if($('#edit-table').innerHTML.includes('data-key="cookieSale"')||$('#edit-table').innerHTML.includes('data-key="leafSale"'))throw Error('Venda por categoria exposta no formulário');
+if(!slideTitles[4].includes('Compras')||slideBody(4).includes('A detalhar')||!speech(4).includes('venda geral'))throw Error('Apresentação exige venda por categoria');
+const lineTest=svgGraph({title:'Margens',type:'line',percent:true,labels:['A'],series:[{name:'Margem',values:[12.5]}]});
+if(!lineTest.includes('svg-data-label')||!lineTest.includes('data-chart-tip')||!lineTest.includes('12,5%'))throw Error('Rótulo ou detalhe ausente no gráfico de linha');
+console.log('PASS: cálculos, duas lojas/consolidado, 10 slides, venda geral sem categorias, rótulos, navegação, salvamento e legado.');
 `,sandbox);
 console.log('PASS: 192 meses, segunda a domingo, sem lacunas ou duplicação.');
 module.exports={sandbox};
