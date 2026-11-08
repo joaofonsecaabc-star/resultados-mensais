@@ -12,7 +12,7 @@ A aba **Apresentação de resultados** abre dez slides para televisão, em tela 
 
 A aba **Análises e gráficos** acrescenta margens bruta e líquida, destino do faturamento, venda acumulada versus meta, comparativo entre lojas, venda versus compras por semana e resultado líquido mensal. A meta acumulada distribui o valor mensal igualmente entre as semanas como referência, sem previsão automática. Valores negativos aparecem abaixo de zero e margens sem venda ficam sem base de cálculo.
 
-TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo e vermelho. O calendário e os cálculos permanecem os mesmos do painel.
+TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo e vermelho. A logo PNG tem transparência real e “SACOLÃO” preto. O layout da reunião usa um número principal por página, gráficos amplos, menos cartões e uma conclusão abaixo de cada gráfico. O calendário e os cálculos permanecem os mesmos do painel.
 
 ## Calendário de apuração
 
