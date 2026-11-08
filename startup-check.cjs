@@ -1,18 +1,18 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const files=['calendar.js','pdf-import-core.js','app.js'];
 function boot(saved=null,{readFails=false,writeFails=false}={}){
- const elements={},writes=[];let persisted=saved;
+ const elements={},writes=[],store={'abc-resultados-v1':saved};
  function element(key){return elements[key]??={value:key==='#month'?'2026-10':key==='#store'?'0':'',style:{},hidden:true,checked:false,textContent:'',innerHTML:'',className:'',files:[],classList:{add(){},remove(){},toggle(){}},addEventListener(){},setAttribute(){},insertAdjacentHTML(_,html){this.innerHTML=html+this.innerHTML},showModal(){},close(){},click(){this.onclick?.()},focus(){},appendChild(){}}}
  const context={console,Intl,Date,structuredClone,Number,Math,String,Object,Array,Set,JSON,Blob,URL,setTimeout,alert(){},confirm:()=>true,
-  localStorage:{getItem(){if(readFails)throw Error('Armazenamento indisponível');return persisted},setItem(key,value){if(writeFails)throw Error('Sem espaço');persisted=value;writes.push({key,value})}},
+  localStorage:{getItem(key){if(readFails)throw Error('Armazenamento indisponível');return store[key]??null},setItem(key,value){if(writeFails)throw Error('Sem espaço');store[key]=value;writes.push({key,value})}},
   document:{querySelector:element,querySelectorAll:()=>[],createElement:()=>element('new-'+Object.keys(elements).length),addEventListener(){},body:{style:{}},documentElement:{classList:{toggle(){}}}}};
  vm.createContext(context);for(const file of files)vm.runInContext(fs.readFileSync(file,'utf8'),context);
- return {context,element,writes,data:()=>JSON.parse(vm.runInContext('JSON.stringify(db)',context)),persisted:()=>persisted};
+ return {context,element,writes,store,data:()=>JSON.parse(vm.runInContext('JSON.stringify(db)',context)),persisted:()=>store['abc-resultados-v1']};
 }
 async function main(){
  const empty=boot();assert.deepEqual(empty.data().records,{});assert.equal(vm.runInContext('typeof seed',empty.context),'undefined');assert.match(empty.element('#content').innerHTML,/Não há lançamentos/);assert.equal(empty.writes.length,0);
  // Os exemplos existem apenas nesta massa de testes, fora do build publicado.
- vm.runInContext(require('./test-fixtures.cjs').toString(),empty.context);vm.runInContext('seed()',empty.context);const examples=empty.data(),sampleJSON=JSON.stringify(examples);
+ vm.runInContext(require('./test-fixtures.cjs').toString(),empty.context);vm.runInContext('seed()',empty.context);const examples=empty.data();examples.dataResetVersion='clean-20261108-v1';const sampleJSON=JSON.stringify(examples);
  const cleaned=boot(sampleJSON);assert.deepEqual(cleaned.data().records,{});assert.deepEqual(JSON.parse(cleaned.persisted()).records,{});
  const fieldNames=['sale','cookieBuy','leafBuy','storeBuy','expenses','cookieSale','leafSale','otherSale'];
  const real={calendarVersion:2,demo:false,target:1000,notes:'Observação real preservada',weeks:Array.from({length:4},()=>Object.fromEntries(fieldNames.map(k=>[k,0])))};real.weeks[0].sale=123.45;real.weeks[0].cookieBuy=1;
@@ -23,8 +23,12 @@ async function main(){
  const restart=boot(keep.persisted());assert.deepEqual(restart.data(),keep.data());assert.equal(restart.writes.length,0);
  // Um backup antigo com demonstrações também não pode repor os exemplos.
  await keep.element('#import-file').onchange({target:{files:[{text:async()=>sampleJSON}],value:'backup.json'}});assert.deepEqual(keep.data().records,{'0|2026-10':real});
- for(const broken of [boot('{json inválido'),boot(null,{readFails:true})]){assert.deepEqual(broken.data().records,{});assert.equal(broken.writes.length,0)}
+ const corrupt=boot('{json inválido');assert.deepEqual(corrupt.data().records,{});assert.equal(corrupt.store['abc-before-clean-20261108-v1'],'{json inválido');
+ const unavailable=boot(null,{readFails:true});assert.deepEqual(unavailable.data().records,{});assert.equal(unavailable.writes.length,0);
  const full=boot(JSON.stringify(mixed),{writeFails:true});assert.deepEqual(full.data().records,{'0|2026-10':real});assert.deepEqual(JSON.parse(full.persisted()),mixed);
- console.log('PASS: início vazio, limpeza de exemplos antigos, preservação de dados/histórico reais, recarga, backup antigo e falhas de armazenamento sem gerar números fictícios.');
+ const legacy=structuredClone(mixed);delete legacy.dataResetVersion;const reset=boot(JSON.stringify(legacy));assert.deepEqual(reset.data().records,{});assert.deepEqual(JSON.parse(reset.store['abc-before-clean-20261108-v1']),legacy);
+ await reset.element('#import-file').onchange({target:{files:[{text:async()=>JSON.stringify({version:1,records:{'0|2026-10':real}})}],value:'dados-reais.json'}});
+ const afterEntry=boot(reset.persisted());assert.deepEqual(afterEntry.data().records,{'0|2026-10':real});assert.equal(afterEntry.writes.length,0);
+ console.log('PASS: limpeza única de todos os períodos antigos com backup, novos lançamentos preservados, início vazio, exemplos antigos removidos e falhas de armazenamento sem números fictícios.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1});

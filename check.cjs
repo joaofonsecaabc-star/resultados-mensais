@@ -52,6 +52,12 @@ let resetCalendar={records:{'0|2026-08':{calendarVersion:2,demo:false,target:100
 if(!normalizeEmptyCalendars(resetCalendar)||resetCalendar.records['0|2026-08'].weeks.length!==4||resetCalendar.records['0|2026-09'].weeks.length!==5||resetCalendar.records['0|2026-08'].target!==100)throw Error('Períodos zerados não ajustados');
 let preserveCalendar={records:{'0|2026-08':{calendarVersion:2,demo:false,target:0,notes:'',weeks:Array.from({length:5},blankWeek)}}};preserveCalendar.records['0|2026-08'].weeks[4].sale=123;
 if(normalizeEmptyCalendars(preserveCalendar)||preserveCalendar.records['0|2026-08'].weeks[4].sale!==123)throw Error('Lançamentos reais alterados sem revisão');
+$('#store').value='0';$('#month').value='2026-10';let monthly=record();const grossBefore=sum(monthly).gross;monthly.monthlyExpenses=500;monthly.expensesProvided=true;
+if(sum(monthly).expenses!==500||sum(monthly).net!==grossBefore-500)throw Error('Despesa mensal repetida por semana');
+monthly.monthlyExpenses=null;monthly.expensesProvided=false;if(sum(monthly).expensesKnown||!renderSection(0).includes('Não informadas')||!slideBody(0).includes('Resultado antes das despesas'))throw Error('Despesa ausente tratada como zero informado');
+if(analyticsModels().margins.series[1].values.at(-1)!==null)throw Error('Margem líquida exibida sem despesas');
+$('#edit-store').value='0';$('#edit-month').value='2026-10';loadEditor();if($('#edit-table').innerHTML.includes('data-key="expenses"'))throw Error('Despesas ainda exigidas por semana');
+$('#monthly-expenses').value='543.21';$('#data-form').onsubmit({preventDefault(){}});if(record().monthlyExpenses!==543.21||Math.abs(sum(record()).net-(grossBefore-543.21))>.001||record().weeks.some(w=>w.expenses!==0))throw Error('Edição de despesa mensal inválida');
 console.log('PASS: cálculos, duas lojas/consolidado, 10 slides, venda geral sem categorias, rótulos, navegação, salvamento e legado.');
 `,sandbox);
 console.log('PASS: 192 meses, segunda a domingo, sem lacunas ou duplicação.');

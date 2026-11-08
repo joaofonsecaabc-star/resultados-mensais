@@ -127,7 +127,7 @@
   for(const s of selected){
    const r=s.row,a=s.allocation,periodKey=branches[branch(r.branch)]+'|'+a.month;let rec=next.records[periodKey];
    if(rec&&!rec.demo&&(rec.calendarVersion!==2||rec.weeks.length!==root.monthWeeks(a.month).length))throw Error('Revise o calendário dos lançamentos antigos de '+a.month+' antes de importar.');
-   if(!rec||rec.demo){if(rec?.demo)replaced.push(periodKey);rec=next.records[periodKey]={calendarVersion:2,demo:false,target:0,notes:'',weeks:root.monthWeeks(a.month).map(()=>Object.fromEntries(fields.map(([k])=>[k,0])))} }
+   if(!rec||rec.demo){if(rec?.demo)replaced.push(periodKey);rec=next.records[periodKey]={calendarVersion:2,demo:false,target:0,notes:'',monthlyExpenses:null,expensesProvided:false,weeks:root.monthWeeks(a.month).map(()=>Object.fromEntries(fields.map(([k])=>[k,0])))} }
    rec.weeks[a.week][r.category]=(cents(rec.weeks[a.week][r.category])+cents(r.value))/100;
    next.pdfImportTitles[s.id]={kind:r.kind||'purchase',branch:branch(r.branch),doc:r.doc,parcel:r.parcel,supplier:r.supplier,due:r.due,value:r.value,category:r.category,file:r.file,periodKey,week:a.week,importedAt};
    periods.add(periodKey);total+=cents(r.value);

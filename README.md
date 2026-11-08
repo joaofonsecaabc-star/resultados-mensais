@@ -73,4 +73,10 @@ O segundo leitor identifica a data do movimento e importa exclusivamente a linha
 
 Correção de setembro/2026: `periodForDate` é a fonte única para localizar loja/mês/semana das importações. Períodos totalmente zerados são ajustados automaticamente à nova quantidade de semanas. Períodos antigos com valores são preservados para revisão no editor; históricos legados de PDFs permanecem válidos para evitar perda de dados ou duplicação.
 
-Correção de inicialização: nenhum caminho de execução do aplicativo cria números simulados, incluindo ausência de dados ou falha na leitura do armazenamento. A remoção de demonstrações é restrita a registros com `demo: true`; lançamentos reais e seu histórico de PDFs permanecem intactos. A barra visual do menu lateral é oculta sem bloquear sua rolagem.
+Correção de inicialização: nenhum caminho de execução do aplicativo cria números simulados, incluindo ausência de dados ou falha na leitura do armazenamento. Após a limpeza única solicitada pelo usuário, a remoção automática de demonstrações é restrita a registros com `demo: true`; novos lançamentos reais e seu histórico de PDFs permanecem intactos. A barra visual do menu lateral é oculta sem bloquear sua rolagem.
+
+## Limpeza única e despesas mensais
+
+A atualização clean-20261108-v1 atende à solicitação de zerar todos os períodos antigos, inclusive setembro, em cada navegador. Antes da limpeza, o JSON original é preservado em uma chave de backup e pode ser baixado pelo rodapé ou em Configurações. A versão da limpeza fica no próprio estado salvo; novos lançamentos e backups importados depois dela são preservados nas próximas aberturas. Não existe geração automática de exemplos.
+
+Despesas operacionais são informadas uma única vez por loja/mês em Lançar dados → Despesas do mês (R$), também acessível pelo botão Editar no indicador. Campo em branco significa não informado; zero explícito significa despesa zero informada. O resultado semanal é venda menos compras (deixa antes das despesas). O resultado líquido mensal desconta a despesa uma única vez; sem ela, o painel e os slides mostram resultado antes das despesas, e gráficos de margem líquida ficam sem esse ponto. Campos semanais antigos são aceitos no backup e agregados para migração, sem duplicação.
