@@ -1,0 +1,4 @@
+@font-face{font-family:Manrope;src:url('manrope.ttf') format('truetype');font-style:normal;font-weight:200 800;font-display:swap}
+.export-mode .presentation-top .header-actions,.export-mode .presentation-controls button,.export-mode #slide-dots{visibility:hidden!important}
+.export-mode #tv-script{display:none!important}
+.export-mode *{animation:none!important;transition:none!important;caret-color:transparent!important}

@@ -8,11 +8,13 @@ Selecione unidade e mês, clique em **Lançar dados** e preencha venda geral, co
 
 A aba **Apresentação de resultados** abre dez slides para televisão, em tela cheia quando suportado pelo navegador. Use as setas ou Page Up/Page Down para navegar; Home/End vão ao início/fim. O roteiro de fala fica oculto e pode ser aberto manualmente (aparece também na TV). O botão Sair encerra a apresentação.
 
-**Baixar PowerPoint** gera um `.pptx` de dez slides com a unidade e o mês selecionados, comparativo dos últimos três meses, gráficos editáveis, notas do apresentador e a logo oficial. O processamento ocorre no navegador; os lançamentos não são enviados a um servidor. O gerador usa PptxGenJS 4.0.1 e JSZip incluídos no próprio site, sob licença MIT. O arquivo identifica exemplos como demonstração e exige revisão de lançamentos antigos antes de exportar. O slide entre lojas inclui as duas unidades e sinaliza exemplos ou ausência de dados.
+**Baixar PowerPoint** gera um `.pptx` de dez slides com a mesma aparência da apresentação do site. O gerador carrega a própria página em uma área de renderização de 1920 × 1080, usando os mesmos componentes HTML, CSS e a fonte Manrope local. Cada página entra no PPT como uma imagem PNG integral, sem alterar seus pixels. Isso mantém a aparência fiel; textos e gráficos não são editáveis separadamente no PowerPoint. As notas de fala permanecem nas notas de cada slide. Os botões de navegação ficam invisíveis na exportação, preservando o espaço do layout.
+
+O processamento ocorre no navegador; os lançamentos não são enviados a um servidor. Um snapshot isolado mantém o mês, a loja e os dados escolhidos durante toda a captura. O gerador usa PptxGenJS 4.0.1, JSZip e html-to-image 1.11.13 incluídos no site. As licenças MIT e SIL Open Font License estão junto ao código. O arquivo identifica exemplos como demonstração e exige revisão de lançamentos antigos antes de exportar. O slide entre lojas inclui as duas unidades e sinaliza exemplos ou ausência de dados.
 
 A aba **Análises e gráficos** acrescenta margens bruta e líquida, destino do faturamento, venda acumulada versus meta, comparativo entre lojas, venda versus compras por semana e resultado líquido mensal. A meta acumulada distribui o valor mensal igualmente entre as semanas como referência, sem previsão automática. Valores negativos aparecem abaixo de zero e margens sem venda ficam sem base de cálculo.
 
-TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo e vermelho. A logo PNG tem transparência real e “SACOLÃO” preto. O layout da reunião usa um número principal por página, gráficos amplos, menos cartões e uma conclusão abaixo de cada gráfico. O calendário e os cálculos permanecem os mesmos do painel.
+TV e PowerPoint usam a identidade da logo: verde principal, verde-claro, amarelo e vermelho. A logo PNG usa apenas o logotipo ABC fornecido pelo usuário, igual ao outro portal. O layout da reunião usa um número principal por página, gráficos amplos, menos cartões e uma conclusão abaixo de cada gráfico. O calendário e os cálculos permanecem os mesmos do painel.
 
 ## Calendário de apuração
 
@@ -49,4 +51,4 @@ Cloudflare Pages com integração GitHub:
 - Diretório de saída: `dist`.
 - Diretório raiz: raiz do repositório.
 
-O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A publicação contém apenas o aplicativo e os exemplos simulados. Fontes usam Google Fonts com alternativa local de sistema.
+O site não precisa de D1, segredos, integrações ou variáveis de ambiente. A publicação contém apenas o aplicativo e os exemplos simulados. A fonte Manrope fica hospedada no próprio site para manter a exportação consistente.

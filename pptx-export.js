@@ -1,29 +1,8 @@
-// Apresentação editorial 16:9 com gráficos nativos e dados locais.
-function makeResultsPptx(d,Ctor,models){
- const p=new Ctor();p.layout='LAYOUT_WIDE';p.author='Sacolão ABC';p.company='Sacolão ABC';p.title=d.unit+' · '+d.month;p.subject='Resultados mensais';p.lang='pt-BR';p.theme={headFontFace:'Arial',bodyFontFace:'Arial',lang:'pt-BR'};
- const C={green:'285427',ink:'183220',muted:'718074',lime:'9ABB45',yellow:'E9BA28',red:'C84237',line:'DCE5DC',soft:'F1F5ED'},r=d.record,t=d.totals;
- const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}).format(n),pct=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(n)+'%';
- const month=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(d.month+'-15'));
- const titles=['Resultados do mês','Evolução e calendário','O ritmo de cada semana','Compras e despesas','O que compõe a venda','Evolução das margens','Da venda ao resultado','Venda acumulada e meta','Comparativo entre lojas','Fechamento e próximos passos'];
- const txt=(s,v,x,y,w,h,size=18,extra={})=>s.addText(String(v),{x,y,w,h,fontFace:'Arial',fontSize:size,color:C.ink,margin:0,valign:'mid',...extra});
- const rect=(s,x,y,w,h,fill)=>s.addShape(p.ShapeType.rect,{x,y,w,h,line:{color:fill},fill:{color:fill}});
- function base(i){const s=p.addSlide();s.background={color:'FFFFFF'};rect(s,.5,.44,.08,.48,C.yellow);txt(s,i===8?'DUAS LOJAS':d.unit,.75,.42,9,.26,10,{bold:true,color:C.green,charSpacing:1.3});txt(s,month,.75,.75,9,.27,12,{color:C.muted});if(d.logoData)s.addImage({data:d.logoData,x:11.4,y:.3,w:1.3,h:.71});txt(s,titles[i],.6,1.18,12.1,.72,32,{bold:true});rect(s,.6,6.99,12.1,.008,C.line);txt(s,d.demo?'DADOS DE DEMONSTRAÇÃO':'Apuração gerencial estimada. Compras utilizadas como custo.',.6,7.12,10,.18,9,{color:C.muted});txt(s,String(i+1).padStart(2,'0')+' / 10',11.9,7.08,.8,.26,11,{bold:true,color:C.green,align:'right'});s.addNotes((d.speeches?.[i]||'')+'\n\nResultados estimados com compras como custo, sem ajuste de estoque. '+(d.demo?'Contém dados de demonstração.':''));return s}
- function takeaway(s,v){rect(s,.6,6.26,.055,.42,C.yellow);txt(s,v,.8,6.27,11.8,.4,14,{color:C.green})}
- function metric(s,label,value,sub,x,y,w=3.3){txt(s,label,x,y,w,.28,12,{color:C.muted});txt(s,value,x,y+.4,w,.62,29,{bold:true,color:String(value).startsWith('-')?C.red:C.green});if(sub)txt(s,sub,x,y+1.11,w,.3,11,{color:C.muted})}
- function chart(s,m,x=.6,y=2.12,w=12.1,h=3.9,extra={}){const indices=m.labels.map((_,i)=>i).filter(i=>m.series.some(s=>Number.isFinite(s.values[i])));if(!indices.length){txt(s,'Sem base de cálculo neste período.',x,y,w,h,18,{color:C.muted,align:'center'});return}const data=m.series.map(v=>({name:v.name,labels:indices.map(i=>m.labels[i]),values:indices.map(i=>Number.isFinite(v.values[i])?v.values[i]:null)}));s.addChart(m.type==='line'?p.ChartType.line:p.ChartType.bar,data,{x,y,w,h,barDir:'col',barGrouping:'clustered',gapSizePct:105,chartColors:[C.green,C.yellow,C.lime,C.red],invertedColors:[C.red],showLegend:data.length>1,legendPos:'b',legendColor:C.muted,legendFontSize:11,legendFontFace:'Arial',catAxisLabelFontFace:'Arial',catAxisLabelFontSize:12,catAxisLabelColor:C.muted,catAxisLineShow:false,valAxisLabelFontFace:'Arial',valAxisLabelFontSize:11,valAxisLabelColor:C.muted,valAxisLabelFormatCode:m.percent?'0"%"':'#,##0',valAxisMinVal:Math.min(0,...data.flatMap(v=>v.values.filter(Number.isFinite))),valGridLine:{color:'E8EEE7',width:.6},showMarker:m.type==='line',markerSize:5,lineSize:2.5,showValue:m.type==='bar',dataLabelPosition:'outEnd',dataLabelFontFace:'Arial',dataLabelFontSize:12,dataLabelColor:C.green,dataLabelFormatCode:m.percent?'0.0"%"':'#,##0',showCatName:false,showSerName:false,dispBlanksAs:'gap',showTitle:false,...extra})}
- function rows(s,items,x,y,w){items.forEach(([label,value,sub],i)=>{const yy=y+i*1.15;txt(s,label,x,yy,w*.56,.35,14,{color:C.muted});txt(s,value,x+w*.53,yy-.04,w*.47,.5,25,{bold:true,color:String(value).startsWith('-')?C.red:C.green,align:'right'});if(sub)txt(s,sub,x,yy+.46,w,.25,11,{color:C.muted});if(i<items.length-1)rect(s,x,yy+.89,w,.008,C.line)})}
- function donut(s,items,x,y,w,h){if(!items.some(v=>v[1]>0)){txt(s,'Sem valores neste grupo.',x,y,w,h,20,{color:C.muted,align:'center'});return}s.addChart(p.ChartType.doughnut,[{name:'Composição',labels:items.map(v=>v[0]),values:items.map(v=>v[1])}],{x,y,w,h,holeSize:73,chartColors:[C.green,C.lime,C.yellow,C.red],showLegend:false,showPercent:false,showValue:false,showTitle:false});}
- function table(s,items,x,y,w,cols){s.addTable(items,{x,y,w,colW:cols,border:{type:'solid',color:C.line,pt:.5},fontFace:'Arial',fontSize:13,color:C.ink,fill:'FFFFFF',margin:.08,rowH:.39,autoPage:false,paraSpaceAfter:0})}
- let s=base(0);rect(s,.6,2.28,6.1,3.5,C.green);txt(s,'VENDA GERAL',.95,2.67,5.4,.3,12,{color:'D9E6D3',bold:true,charSpacing:1.3});txt(s,money(t.sale),.95,3.25,5.4,.87,46,{bold:true,color:'FFFFFF'});txt(s,r.weeks.length+' semanas completas de apuração',.95,4.48,5.4,.35,16,{color:'D9E6D3'});rows(s,[['Compras',money(t.buy)],['Despesas',money(t.expenses)],['Resultado líquido estimado',money(t.net)]],7.25,2.35,5.1);takeaway(s,'Média de '+money(t.average)+' por semana. Margem líquida estimada: '+(t.sale?pct(t.margin):'sem base de cálculo')+'.');
- s=base(1);const hist=d.history.filter(h=>h.totals);txt(s,'VENDA GERAL',.7,2.08,5.8,.3,12,{bold:true,color:C.muted});chart(s,{type:'bar',labels:hist.map(h=>h.label),series:[{name:'Venda',values:hist.map(h=>h.totals.sale)}]},.55,2.52,6.15,3.3);txt(s,'MÉDIA POR SEMANA',7.05,2.08,5.3,.3,12,{bold:true,color:C.muted});chart(s,{type:'bar',labels:hist.map(h=>h.label),series:[{name:'Média semanal',values:hist.map(h=>h.totals.average)}]},6.9,2.52,5.85,3.3,{chartColors:[C.lime]});takeaway(s,hist.map(h=>h.label+': '+h.record.weeks.length+' semanas').join('    /    ')+'. A média semanal permite comparar períodos de durações diferentes.');
- s=base(2);chart(s,models.weekly,.6,2.12,12.1,3.82);takeaway(s,d.dates.map((v,i)=>(i+1)+'ª: '+v.start.slice(8)+'/'+v.start.slice(5,7)+'–'+v.end.slice(8)+'/'+v.end.slice(5,7)).join('    /    '));
- s=base(3);metric(s,'COMPRAS TOTAIS',money(t.buy),'Biscoitos, folhas e demais produtos',.7,2.2,5.5);chart(s,{type:'bar',labels:['Biscoitos','Folhas','Loja (demais)'],series:[{name:'Compras',values:[t.cookieBuy,t.leafBuy,t.storeBuy]}]},.55,3.66,5.9,2.35,{barDir:'bar',showValue:true,catAxisLabelFontSize:12});table(s,[['Apuração simplificada','Valor'],['Venda geral',money(t.sale)],['Compras',money(t.buy)],['Resultado bruto estimado',money(t.gross)],['Despesas',money(t.expenses)],['Resultado líquido estimado',money(t.net)]],7.05,2.3,5.65,[3.45,2.2]);takeaway(s,'As compras representam '+(t.sale?pct(t.buy/t.sale*100):'uma proporção sem base')+' da venda. Valores sem ajuste de estoque.');
- s=base(4);donut(s,[['Biscoitos',t.cookieSale],['Folhas',t.leafSale],['Outros itens',t.otherSale],['A detalhar',t.unassigned]],.55,2.1,5.65,3.85);rows(s,[['Biscoitos',money(t.cookieSale)],['Verduras de folha',money(t.leafSale)],['Outros itens',money(t.otherSale)]],6.85,2.18,5.85);takeaway(s,'Venda geral: '+money(t.sale)+'. A detalhar: '+money(t.unassigned)+'. As categorias já estão incluídas no total.');
- s=base(5);chart(s,models.margins,.55,2.2,8.65,3.84);metric(s,'MARGEM BRUTA',t.sale?pct(t.gross/t.sale*100):'Sem base','Antes das despesas',9.7,2.45,2.75);metric(s,'MARGEM LÍQUIDA',t.sale?pct(t.margin):'Sem base','Depois das despesas',9.7,4.18,2.75);takeaway(s,'Margens estimadas a partir das compras e despesas informadas, sem ajuste de estoque.');
- s=base(6);chart(s,{...models.destination,series:[{name:'Entradas e deduções',values:[t.sale,-t.buy,-t.expenses,t.net]}]},.6,2.16,12.1,3.9,{chartColors:[C.green],dataLabelPosition:'ctr',dataLabelColor:'FFFFFF',catAxisLabelPos:'low'});takeaway(s,'Resultado estimado: '+money(t.sale)+' − '+money(t.buy)+' − '+money(t.expenses)+' = '+money(t.net)+'.');
- s=base(7);chart(s,models.goal,.55,2.16,8.65,3.9);metric(s,'META DO MÊS',r.target?money(r.target):'Não definida','Distribuição semanal linear',9.6,2.45,2.95);metric(s,'ATINGIMENTO',r.target?pct(t.sale/r.target*100):'Sem meta',r.target?'Diferença: '+money(t.sale-r.target):'',9.6,4.18,2.95);takeaway(s,r.target?'A linha de meta é uma referência distribuída igualmente entre as semanas, não uma previsão de vendas.':'Defina a meta nos lançamentos para comparar a venda acumulada.');
- s=base(8);chart(s,models.stores,.6,2.13,12.1,2.97);table(s,[['Unidade','Venda por semana','Margem líquida'],...d.stores.map(v=>[v.short+(v.record?.demo?' (demo)':''),v.totals?money(v.totals.average):'Sem dados',v.totals?.sale?pct(v.totals.margin):'Sem base'])],.7,5.43,11.9,[5.2,3.35,3.35]);
- s=base(9);rect(s,.6,2.3,4.5,3.68,C.soft);metric(s,'RESULTADO LÍQUIDO ESTIMADO',money(t.net),t.sale?pct(t.margin)+' de margem':'Sem base para margem',.95,2.7,3.8);metric(s,'META DE VENDA',r.target?pct(t.sale/r.target*100):'Não definida','Atingimento no mês',.95,4.35,3.8);txt(s,'OBSERVAÇÕES E PRÓXIMOS PASSOS',5.72,2.35,6.8,.35,12,{bold:true,color:C.muted,charSpacing:1});const notes=r.notes||'Os próximos passos ainda não foram registrados.';txt(s,notes.length>620?notes.slice(0,617)+'…':notes,5.72,3.03,6.8,2.9,notes.length>330?17:22,{valign:'top'});if(notes.length>620)s.addNotes('Observações completas:\n'+notes);
+// Exportação fiel: cada página vem diretamente dos slides HTML/CSS do site.
+function makeResultsPptx(data,Ctor){
+ if(!Array.isArray(data.images)||data.images.length!==10)throw Error('A captura deve conter os dez slides completos.');
+ const p=new Ctor();p.layout='LAYOUT_WIDE';p.author='Sacolão ABC';p.company='Sacolão ABC';p.title=data.unit+' · '+data.month;p.subject='Apresentação idêntica ao site';p.lang='pt-BR';
+ data.images.forEach((image,index)=>{if(!/^data:image\/png;base64,/.test(image))throw Error('Um slide não foi capturado corretamente.');const s=p.addSlide();s.background={color:'FFFFFF'};s.addImage({data:image,x:0,y:0,w:13.333333,h:7.5,altText:'Slide '+(index+1)+' da apresentação de resultados do Sacolão ABC'});s.addNotes(data.speeches?.[index]||'')});
  return p;
 }
 async function normalizePptxPackage(data,ZipCtor,outputType='blob'){
@@ -39,18 +18,56 @@ async function normalizePptxPackage(data,ZipCtor,outputType='blob'){
   }
   return zip.generateAsync({type:outputType,compression:'DEFLATE',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
 }
-let pptxLoadPromise;
-function loadPptxLibrary(){if((globalThis.PptxGenJS||globalThis.pptxgen))return Promise.resolve((globalThis.PptxGenJS||globalThis.pptxgen));if(pptxLoadPromise)return pptxLoadPromise;pptxLoadPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='pptxgen.bundle.js';script.onload=()=>(globalThis.PptxGenJS||globalThis.pptxgen)?resolve((globalThis.PptxGenJS||globalThis.pptxgen)):reject(Error('Biblioteca indisponível.'));script.onerror=()=>{pptxLoadPromise=null;script.remove();reject(Error('Não foi possível carregar o gerador. Verifique a conexão e tente novamente.'))};document.head.appendChild(script)});return pptxLoadPromise}
+
+function loadExportScript(file,globalName){
+ if(globalThis[globalName])return Promise.resolve(globalThis[globalName]);
+ return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=file;s.onload=()=>globalThis[globalName]?resolve(globalThis[globalName]):reject(Error('Não foi possível iniciar '+globalName));s.onerror=()=>{s.remove();reject(Error('Não foi possível carregar o gerador. Verifique sua conexão.'))};document.head.appendChild(s)});
+}
+function loadPptxLibrary(){return loadExportScript('pptxgen.bundle.js','PptxGenJS')}
+function within(promise,ms,message){let timer;return Promise.race([promise,new Promise((_,reject)=>timer=setTimeout(()=>reject(Error(message)),ms))]).finally(()=>clearTimeout(timer))}
+function bufferDataUrl(buffer,type){let value='';for(const byte of new Uint8Array(buffer))value+=String.fromCharCode(byte);return 'data:'+type+';base64,'+btoa(value)}
+async function captureWebsiteSlides(snapshot,onProgress){
+
+ const fontResponse=await fetch('manrope.ttf');if(!fontResponse.ok)throw Error('Não foi possível carregar a fonte da apresentação.');
+ const fontData=bufferDataUrl(await fontResponse.arrayBuffer(),'font/ttf');
+ const fontCSS='@font-face{font-family:Manrope;src:url('+fontData+') format("truetype");font-weight:200 800;font-style:normal}';
+ const frame=document.createElement('iframe');frame.title='Preparação do PowerPoint';frame.setAttribute('aria-hidden','true');
+ frame.style.cssText='position:fixed;left:-100000px;top:0;width:1920px;height:1080px;border:0;pointer-events:none;';
+ const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(Error('Não foi possível preparar os slides.'))});
+ frame.src='index.html?export-render=1';document.body.appendChild(frame);
+ try{
+  await within(ready,30000,'O carregamento da apresentação demorou. Tente novamente.');
+  const win=frame.contentWindow;
+  if(typeof win.prepareResultExport!=='function')throw Error('Atualize a página para carregar a versão mais recente da apresentação.');
+  const capture=await win.loadExportScript('html-to-image.js','htmlToImage');
+  const count=await within(win.prepareResultExport(snapshot),15000,'A fonte da apresentação não terminou de carregar.');
+  const images=[];
+  for(let index=0;index<count;index++){
+   onProgress('Preparando slide '+(index+1)+' de '+count+'…');
+   const node=await win.renderResultExportSlide(index);
+   const png=await within(capture.toPng(node,{width:1920,height:1080,canvasWidth:1920,canvasHeight:1080,pixelRatio:1,fontEmbedCSS:fontCSS,backgroundColor:'#ffffff',style:{left:'0',top:'0',width:'1920px',height:'1080px',transform:'none'},skipAutoScale:true}),30000,'Não foi possível capturar o slide '+(index+1)+'. Tente novamente.');
+   images.push(png);
+   await new Promise(resolve=>setTimeout(resolve,0));
+  }
+  return images;
+ }finally{frame.remove()}
+}
+let exportInProgress=false;
 async function downloadResultsPptx(){
-  const buttons=[...document.querySelectorAll('[data-export-pptx]')],status=document.querySelector('#pptx-status');
-  try{
-    const data=presentationData();if(!data.record)throw Error('Lance os dados deste mês antes de baixar a apresentação.');if(data.review.length)throw Error('Confira as datas dos lançamentos antigos antes de exportar: '+data.review.join(', ')+'.');
-    validate({version:1,records:structuredClone(db.records)});data.speeches=slideTitles.map((_,i)=>slideSpeech(i));
-    buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true')});status.textContent='Gerando PowerPoint…';
-    const Ctor=await loadPptxLibrary();const response=await fetch('brand-logo.png');if(!response.ok)throw Error('Não foi possível carregar a logo. Tente novamente.');const bytes=new Uint8Array(await response.arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);data.logoData='data:image/png;base64,'+btoa(binary);
-    const pptx=makeResultsPptx(data,Ctor,analyticsModels(data));const filename='Sacolao-ABC-'+(data.store==='all'?'Duas-lojas':data.store==='0'?'Doze-de-Outubro':'Pedro-Leopoldo')+'-'+data.month+'.pptx';
-    const raw=await pptx.write({outputType:'arraybuffer',compression:true});const blob=await normalizePptxPackage(raw,globalThis.JSZip);const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),10000);status.textContent='PowerPoint gerado. Confira o download do navegador.';
-  }catch(error){status.textContent=error.message;alert(error.message)}finally{buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy')})}
+ if(exportInProgress)return;
+ const buttons=[...document.querySelectorAll('[data-export-pptx]')],status=$('#pptx-status');
+ const progress=message=>{status.textContent=message;buttons.forEach(button=>button.setAttribute('aria-label',message))};
+ try{
+  const data=presentationData();if(!data.record)throw Error('Lance os dados deste mês antes de baixar a apresentação.');if(data.review.length)throw Error('Confira as datas dos lançamentos antigos antes de exportar: '+data.review.join(', ')+'.');
+  validate({version:1,records:structuredClone(db.records)});data.speeches=slideTitles.map((_,i)=>slideSpeech(i));
+  const snapshot={records:structuredClone(db),store:$('#store').value,month:$('#month').value};
+  exportInProgress=true;buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true')});progress('Preparando a apresentação…');
+  const Ctor=await loadPptxLibrary();data.images=await captureWebsiteSlides(snapshot,progress);
+  progress('Montando o arquivo PowerPoint…');const pptx=makeResultsPptx(data,Ctor);
+  const raw=await pptx.write({outputType:'arraybuffer',compression:true});const blob=await normalizePptxPackage(raw,globalThis.JSZip);
+  const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='Sacolao-ABC-'+(data.store==='all'?'Duas-lojas':data.store==='0'?'Doze-de-Outubro':'Pedro-Leopoldo')+'-'+data.month+'.pptx';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),10000);
+  status.textContent='PowerPoint gerado com o mesmo visual dos slides do site.';
+ }catch(error){status.textContent=error.message;alert(error.message)}finally{exportInProgress=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');b.removeAttribute('aria-label')})}
 }
 if(typeof document!=='undefined')document.addEventListener('click',e=>{if(e.target.closest('[data-export-pptx]'))downloadResultsPptx()});
 if(typeof module!=='undefined')module.exports={makeResultsPptx,normalizePptxPackage};

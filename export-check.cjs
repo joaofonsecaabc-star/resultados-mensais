@@ -1,30 +1,21 @@
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
-const {sandbox}=require('./check.cjs');
-const {makeResultsPptx,normalizePptxPackage}=require('./pptx-export.js');
-const runtimeModules=process.env.ABC_RUNTIME_MODULES;
-if(!runtimeModules)throw Error('Defina ABC_RUNTIME_MODULES para testar o gerador usando as bibliotecas do ambiente.');
-const Ctor=require(path.join(runtimeModules,'pptxgenjs'));
-async function check(){
-  const browser={setTimeout,clearTimeout,console,Promise,TextEncoder,TextDecoder,Uint8Array,ArrayBuffer,Blob,URL};vm.createContext(browser);
-  vm.runInContext(fs.readFileSync('pptxgen.bundle.js','utf8'),browser);
-  vm.runInContext(fs.readFileSync('pptx-export.js','utf8'),browser);
-  assert.equal(typeof await vm.runInContext('loadPptxLibrary()',browser),'function');
-  assert.equal(typeof browser.JSZip,'function');
-  console.log('PASS: carregamento da biblioteca real no contexto do navegador.');
-  fs.mkdirSync('.qa',{recursive:true});
-  for(const name of ['demo','zero','negative','missing']){
-    vm.runInContext(`seed();$('#store').value='0';$('#month').value='2026-10';`,sandbox);
-    if(name==='zero'||name==='negative')vm.runInContext(`for(const w of db.records['0|2026-10'].weeks)for(const [key] of fields)w[key]=0;db.records['0|2026-10'].demo=false;${name==='negative'?"for(const w of db.records['0|2026-10'].weeks){w.sale=100;w.cookieBuy=150;w.expenses=20;}":''}`,sandbox);
-    if(name==='missing')vm.runInContext(`delete db.records['1|2026-10'];delete db.records['0|2026-08'];`,sandbox);
-    const data=vm.runInContext('presentationData()',sandbox),models=vm.runInContext('analyticsModels()',sandbox);
-    data.speeches=vm.runInContext('slideTitles.map((_,i)=>slideSpeech(i))',sandbox);
-    data.logoData='data:image/png;base64,'+fs.readFileSync('brand-logo.png').toString('base64');
-    const deck=makeResultsPptx(data,Ctor,models);assert.equal(deck._slides.length,10);
-    assert.ok(deck._slides.every(s=>s._slideNum));
-    const raw=await deck.write({outputType:'nodebuffer',compression:true});const buffer=await normalizePptxPackage(raw,require(path.join(runtimeModules,'jszip')),'nodebuffer');fs.writeFileSync('.qa/'+name+'.pptx',buffer);
-    assert.ok(buffer.length>10000);console.log('PASS: PPTX '+name+' com 10 slides: '+buffer.length+' bytes');
-  }
-  vm.runInContext(`seed();$('#store').value='all';$('#month').value='2026-10';if(presentationData().totals.sale!==sum(record()).sale)throw Error('Consolidado divergente');active=7;render();if(!$('#content').innerHTML.includes('Venda acumulada'))throw Error('Hub ausente');if(slideTitles.length!==10)throw Error('Contagem incorreta');slideIndex=8;drawSlide();if(!$('#slide').innerHTML.includes('Doze de Outubro'))throw Error('Comparação ausente');`,sandbox);
-  console.log('PASS: hub de gráficos, comparação e consolidado.');
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
+const {sandbox}=require('./check.cjs');const {makeResultsPptx,normalizePptxPackage}=require('./pptx-export.js');
+const modules=process.env.ABC_RUNTIME_MODULES;if(!modules)throw Error('Defina ABC_RUNTIME_MODULES para testar o gerador com as bibliotecas do ambiente.');
+const Pptx=require(path.join(modules,'pptxgenjs')),Zip=require(path.join(modules,'jszip'));
+async function main(){
+ const context={setTimeout,clearTimeout,console,Promise,TextEncoder,TextDecoder,Uint8Array,ArrayBuffer,Blob,URL};vm.createContext(context);vm.runInContext(fs.readFileSync('pptxgen.bundle.js','utf8'),context);vm.runInContext(fs.readFileSync('pptx-export.js','utf8'),context);assert.equal(typeof await vm.runInContext('loadPptxLibrary()',context),'function');
+ const source=fs.readFileSync('brand-logo.png'),image='data:image/png;base64,'+source.toString('base64');
+ const data={month:'2026-10',unit:'ABC DOZE DE OUTUBRO',images:Array(10).fill(image),speeches:Array.from({length:10},(_,i)=>'Roteiro do slide '+(i+1))};
+ const pptx=makeResultsPptx(data,Pptx);assert.equal(pptx._slides.length,10);const raw=await pptx.write({outputType:'nodebuffer',compression:true});const final=await normalizePptxPackage(raw,Zip,'nodebuffer');const zip=await Zip.loadAsync(final);
+ const media=Object.keys(zip.files).filter(f=>/^ppt\/media\/.+\.png$/.test(f));assert.equal(media.length,10);for(const file of media)assert.deepEqual(await zip.file(file).async('nodebuffer'),source);
+ assert.equal(Object.keys(zip.files).filter(f=>/^ppt\/charts\/chart\d+\.xml$/.test(f)).length,0);
+ assert.equal(Object.keys(zip.files).filter(f=>/^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(f)).length,10);
+ assert.throws(()=>makeResultsPptx({...data,images:[]},Pptx),/dez slides/);
+ fs.mkdirSync('.qa',{recursive:true});fs.writeFileSync('.qa/exact-structure.pptx',final);
+ sandbox.window={};vm.runInContext(fs.readFileSync('export-renderer.js','utf8'),sandbox);
+ vm.runInContext("seed();globalThis.exportPayload={records:structuredClone(db),store:'1',month:'2026-09'};",sandbox);
+ const count=await sandbox.window.prepareResultExport(sandbox.exportPayload);assert.equal(count,10);
+ vm.runInContext("if($('#store').value!=='1'||$('#month').value!=='2026-09')throw Error('Seleção diferente da solicitada');if(sum(record()).sale!==db.records['1|2026-09'].weeks.reduce((n,w)=>n+w.sale,0))throw Error('Dados diferentes');exportPayload.records.records['1|2026-09'].weeks[0].sale=999999999;if(db.records['1|2026-09'].weeks[0].sale===999999999)throw Error('Snapshot não isolado');",sandbox);
+ console.log('PASS: 10 páginas com PNGs sem alteração de bytes, notas, biblioteca real, mês/unidade e snapshot isolado.');
 }
-check().catch(e=>{console.error(e);process.exitCode=1});
+main().catch(error=>{console.error(error);process.exitCode=1});
