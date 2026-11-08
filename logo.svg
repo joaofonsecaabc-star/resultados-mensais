@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="70 100 1550 635" role="img" aria-label="Sacolão ABC">
+  <title>Sacolão ABC</title>
+  <defs>
+    <path id="c" d="M1595 154V340H1482V275C1330 225 1273 296 1273 422C1273 556 1360 594 1466 554L1590 524V666C1470 721 1296 725 1190 645C1070 546 1074 407 1134 282C1216 107 1378 104 1595 154Z"/>
+    <path id="b" fill-rule="evenodd" d="M595 140H940C1068 140 1130 198 1130 300C1130 355 1104 400 1057 420C1128 442 1156 512 1156 555C1156 674 1067 700 940 700H595V585H675V265H595ZM830 266V360H920C958 360 977 343 977 314C977 283 957 266 920 266ZM830 480V585H925C971 585 994 567 994 533C994 499 973 480 925 480Z"/>
+    <path id="a" fill-rule="evenodd" d="M175 140H462L614 585H666V700H390V585H445L430 545H281L267 585H334V700H92V585H140L244 266H175ZM359 286L307 449H410Z"/>
+  </defs>
+  <g stroke="#fff" stroke-width="5" stroke-linejoin="round" shape-rendering="geometricPrecision"><use href="#c" fill="#e9000b"/><use href="#b" fill="#ffbf00"/><use href="#a" fill="#86b91c"/></g>
+</svg>

@@ -1,0 +1,13 @@
+{
+  "name": "abc-resultados-mensais",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node check.cjs",
+    "dev": "node serve.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
